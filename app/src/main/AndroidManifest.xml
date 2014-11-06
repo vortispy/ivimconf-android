@@ -19,8 +19,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DetailActivity"
+            android:name=".PresentationActivity"
             android:label="@string/title_activity_detail" >
+        </activity>
+        <activity
+            android:name=".WebViewActivity"
+            android:label="@string/title_activity_web_view" >
         </activity>
     </application>
 
