@@ -4,7 +4,9 @@
     <string name="app_name">ivimconf</string>
     <string name="title_schedule">Schedule</string>
     <string name="title_location">Location</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="profile">PROFILE</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_detail">DetailActivity</string>
+    <string name="presentation">PRESENTATION</string>
 
 </resources>
