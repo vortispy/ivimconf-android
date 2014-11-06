@@ -32,6 +32,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 
 import org.apache.http.HttpResponse;
@@ -278,7 +280,14 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+            View rootView = inflater.inflate(R.layout.activity_webview, container, false);
+
+            WebView webView = (WebView) rootView.findViewById(R.id.webView);
+            webView.setWebViewClient(new WebViewClient());
+            webView.getSettings().setJavaScriptEnabled(Boolean.TRUE);
+            webView.loadUrl("file:///android_asset/map.html");
+
+//            webView.loadUrl("http://www.google.com/");
             return rootView;
         }
     }
