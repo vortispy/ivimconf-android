@@ -20,7 +20,7 @@
         </activity>
         <activity
             android:name=".PresentationActivity"
-            android:label="@string/title_activity_detail" >
+            android:label="@string/presentation" >
         </activity>
         <activity
             android:name=".WebViewActivity"
