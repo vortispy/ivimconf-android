@@ -3,6 +3,7 @@ package com.vortispy.ivimconf;
 import android.app.Activity;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +16,12 @@ import android.widget.TextView;
 
 import com.vortispy.ivimconf.dummy.DummyContent;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -50,9 +55,12 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
      * Views.
      */
     private ListAdapter mAdapter;
+    private ScheduleAdapter scheduleAdapter;
 
     private JSONObject infoJson;
-    private JSONObject schedule;
+    private JSONArray schedule;
+
+    private List<JSONObject> scheduleList = new ArrayList<JSONObject>();
 
     // TODO: Rename and change types of parameters
     public static ScheduleFragment newInstance(JSONObject jsonObject) {
@@ -74,7 +82,31 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
     public ScheduleFragment(JSONObject jsonObject){
         this.infoJson = jsonObject;
         try {
-            this.schedule = jsonObject.getJSONObject("schedules");
+            this.schedule = jsonObject.getJSONArray("schedules");
+            JSONObject firstSchedule = schedule.getJSONObject(0);
+            long openTime = firstSchedule.getInt("scheduled_at");
+
+            long startTime = openTime;
+            for(int i = 0; i < schedule.length(); i++){
+                JSONObject nowSchedule = schedule.getJSONObject(i);
+                nowSchedule.accumulate("starttime", startTime);
+                scheduleList.add(nowSchedule);
+
+                // calculate next start time
+                Log.d("starttime", String.valueOf(startTime));
+                String timestr = nowSchedule.getString("time");
+                for(String w: timestr.split(" ")){
+                    try{
+                        Integer minutes = Integer.parseInt(w);
+                        startTime += minutes*60;
+                        Log.d("time", String.valueOf(startTime));
+                        break;
+                    } catch (Exception e){
+//                        e.printStackTrace();
+                        continue;
+                    }
+                }
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -90,8 +122,9 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
         }
 
         // TODO: Change Adapter to display your content
-        mAdapter = new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS);
+        mAdapter = new ArrayAdapter(getActivity(),
+                android.R.layout.simple_list_item_1, android.R.id.text1, scheduleList);
+        scheduleAdapter = new ScheduleAdapter(getActivity(), android.R.layout.simple_list_item_1, scheduleList);
     }
 
     @Override
@@ -101,9 +134,9 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
 
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
-
-        // Set OnItemClickListener so we can be notified on item clicks
+//        ((AdapterView<ListAdapter>) mListView).setAdapter(mAdapter);
+        mListView.setAdapter(scheduleAdapter);
+                // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
 
         return view;
