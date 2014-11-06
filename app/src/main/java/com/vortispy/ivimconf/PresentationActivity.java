@@ -133,9 +133,9 @@ public class PresentationActivity extends Activity {
         // TODO: internationalization
         textView = (TextView)findViewById(R.id.detail);
         try {
-            textView.setText(presentation.getString("detail"));
+            textView.setText(presentation.getString("details"));
         } catch (JSONException e) {
-            Toast.makeText(this, "REQUIRE DETAIL", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "REQUIRE DETAILS", Toast.LENGTH_LONG).show();
             textView.setText("");
             return;
         }
