@@ -1,5 +1,17 @@
 package com.vortispy.ivimconf;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Locale;
 
 import android.app.Activity;
@@ -7,9 +19,11 @@ import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.os.AsyncTask;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,6 +31,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class MainActivity extends Activity implements ActionBar.TabListener {
@@ -35,6 +58,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
+    JSONObject infoJson;
+    String strJson;
+    String urlString = "http://vimconf.vim-jp.org/info.json";
+    String localJsonFile = "info.json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +101,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+        loadInfoJson();
     }
 
 
@@ -111,6 +139,55 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
     }
 
+    public void loadInfoJson(){
+        if (readJson() == Boolean.TRUE){
+            try {
+                infoJson = new JSONObject(strJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d("json", "File read");
+        } else {
+            new GetInfoJSON().execute();
+        }
+    }
+
+    public Boolean readJson(){
+        InputStream inputStream;
+        try{
+            inputStream = openFileInput(localJsonFile);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuffer stringBuffer = new StringBuffer();
+            String line;
+            while ((line = bufferedReader.readLine()) != null){
+                stringBuffer.append(line);
+            }
+            bufferedReader.close();
+            strJson = stringBuffer.toString();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return Boolean.FALSE;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Boolean.FALSE;
+        }
+
+        return Boolean.TRUE;
+    }
+
+    public Boolean writeJson(String data){
+        OutputStream outputStream;
+        try{
+            outputStream = openFileOutput(localJsonFile, MODE_PRIVATE);
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream));
+            writer.write(data);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
@@ -130,8 +207,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 
         @Override
         public int getCount() {
-            // Show 3 total pages.
-            return 3;
+            // Show 2 total pages.
+            return 2;
         }
 
         @Override
@@ -139,11 +216,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             Locale l = Locale.getDefault();
             switch (position) {
                 case 0:
-                    return getString(R.string.title_section1).toUpperCase(l);
+                    return getString(R.string.title_schedule).toUpperCase(l);
                 case 1:
-                    return getString(R.string.title_section2).toUpperCase(l);
-                case 2:
-                    return getString(R.string.title_section3).toUpperCase(l);
+                    return getString(R.string.title_location).toUpperCase(l);
             }
             return null;
         }
@@ -182,4 +257,52 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         }
     }
 
+    private class GetInfoJSON extends AsyncTask<Void, Void, String>{
+        @Override
+        protected String doInBackground(Void... voids) {
+            HttpClient httpClient = new DefaultHttpClient();
+            StringBuilder uri = new StringBuilder(urlString);
+            HttpGet request = new HttpGet(uri.toString());
+            HttpResponse response;
+
+            try{
+                response = httpClient.execute(request);
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+                return e.getMessage();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return e.getMessage();
+            }
+
+            int status = response.getStatusLine().getStatusCode();
+
+            if(HttpStatus.SC_OK == status){
+                try{
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    response.getEntity().writeTo(outputStream);
+                    strJson = outputStream.toString();
+                    infoJson = new JSONObject(strJson);
+                    writeJson(strJson);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return e.getMessage();
+                } catch (JSONException e){
+                    e.printStackTrace();
+                    return e.getMessage();
+                }
+            } else {
+                return String.valueOf(status);
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if (s != null){
+                Log.d("getJSON", s);
+            }
+        }
+    }
 }
