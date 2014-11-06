@@ -3,12 +3,14 @@ package com.vortispy.ivimconf;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -101,6 +103,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+
+        reloadInfoJson();
         loadInfoJson();
     }
 
@@ -140,9 +144,12 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
     }
 
     public void loadInfoJson(){
-        if (readJson() == Boolean.TRUE){
+
+        if ((strJson = readJson(localJsonFile)) != null){
+//            Log.d("json", String.valueOf(strJson.length()));
             try {
                 infoJson = new JSONObject(strJson);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -152,38 +159,51 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         }
     }
 
-    public Boolean readJson(){
+    public void reloadInfoJson(){
+        new GetInfoJSON().execute();
+        Log.d("json", "reload json");
+    }
+
+    public String readJson(String fileName){
         InputStream inputStream;
+        String ret;
         try{
-            inputStream = openFileInput(localJsonFile);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            inputStream = openFileInput(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
             StringBuffer stringBuffer = new StringBuffer();
             String line;
             while ((line = bufferedReader.readLine()) != null){
                 stringBuffer.append(line);
             }
             bufferedReader.close();
-            strJson = stringBuffer.toString();
+            ret = stringBuffer.toString();
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        Log.d("read", ret);
+        return ret;
+    }
+
+    public Boolean writeJson(String data, String fileName){
+        OutputStream outputStream;
+        try{
+            outputStream = openFileOutput(fileName, MODE_PRIVATE);
+            outputStream.write(data.getBytes("UTF-8"));
+//            PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+//            writer.write(data);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return Boolean.FALSE;
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return Boolean.FALSE;
         } catch (IOException e) {
             e.printStackTrace();
-            return Boolean.FALSE;
-        }
-
-        return Boolean.TRUE;
-    }
-
-    public Boolean writeJson(String data){
-        OutputStream outputStream;
-        try{
-            outputStream = openFileOutput(localJsonFile, MODE_PRIVATE);
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream));
-            writer.write(data);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return Boolean.FALSE;
         }
         return Boolean.TRUE;
     }
@@ -283,7 +303,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                     response.getEntity().writeTo(outputStream);
                     strJson = outputStream.toString();
                     infoJson = new JSONObject(strJson);
-                    writeJson(strJson);
+                    writeJson(strJson, localJsonFile);
+                    Log.d("write", strJson);
+                    Log.d("length", String.valueOf(strJson.length()));
                 } catch (IOException e) {
                     e.printStackTrace();
                     return e.getMessage();
