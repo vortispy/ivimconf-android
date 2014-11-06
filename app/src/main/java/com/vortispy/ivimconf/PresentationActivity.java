@@ -89,9 +89,7 @@ public class PresentationActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     String url = GITHUB_BASE_URL + finalTextView.getText();
-                    Intent intent = new Intent(getApplicationContext(),WebViewActivity.class);
-
-                    intent.putExtra("test_result", url);
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     startActivity(intent);
                 }
             });
@@ -110,9 +108,7 @@ public class PresentationActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     String url = TWITTER_BASE_URL + finalTextView.getText();
-                    Intent intent = new Intent(getApplicationContext(),WebViewActivity.class);
-
-                    intent.putExtra("test_result", url);
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     startActivity(intent);
 
                 }
@@ -137,9 +133,9 @@ public class PresentationActivity extends Activity {
         // TODO: internationalization
         textView = (TextView)findViewById(R.id.detail);
         try {
-            textView.setText(presentation.getString("detail"));
+            textView.setText(presentation.getString("details"));
         } catch (JSONException e) {
-            Toast.makeText(this, "REQUIRE DETAIL", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "REQUIRE DETAILS", Toast.LENGTH_LONG).show();
             textView.setText("");
             return;
         }

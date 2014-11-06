@@ -167,8 +167,15 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
             // fragment is attached to one) that an item has been selected.
             Intent intent = new Intent(getActivity(), PresentationActivity.class);
         JSONObject obj = scheduleList.get(position);
-        intent.putExtra("presentation", obj.toString());
-            startActivity(intent);
+        String type = null;
+        try {
+            type = obj.getString("type");
+            if (type.equals("presentation")) {
+                intent.putExtra("presentation", obj.toString());
+                startActivity(intent);
+            }
+        } catch (JSONException e) {
+        }
     }
 
     /**
