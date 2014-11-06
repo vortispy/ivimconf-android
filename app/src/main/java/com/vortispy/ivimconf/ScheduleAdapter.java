@@ -85,6 +85,7 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
 
         return convertView;
     }
+
     private class SpAvatar{
         ImageView imageView;
         String url;

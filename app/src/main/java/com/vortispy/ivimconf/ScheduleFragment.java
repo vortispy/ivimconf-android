@@ -1,6 +1,7 @@
 package com.vortispy.ivimconf;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.util.Log;
@@ -162,11 +163,12 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(DummyContent.ITEMS.get(position).id);
-        }
+            Intent intent = new Intent(getActivity(), PresentationActivity.class);
+        JSONObject obj = scheduleList.get(position);
+        intent.putExtra("presentation", obj.toString());
+            startActivity(intent);
     }
 
     /**

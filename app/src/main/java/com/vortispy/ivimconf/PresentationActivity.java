@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +19,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
 public class PresentationActivity extends Activity {
@@ -37,7 +43,7 @@ public class PresentationActivity extends Activity {
         }
 
         try {
-            presentation = new JSONObject(getIntent().getStringExtra("detail"));
+            presentation = new JSONObject(getIntent().getStringExtra("presentation"));
 
         } catch (JSONException e) {
             Toast.makeText(this, "REQUIRE JSON OBJECT", Toast.LENGTH_LONG).show();
@@ -56,8 +62,8 @@ public class PresentationActivity extends Activity {
         ImageView imageView = (ImageView)findViewById(R.id.imageView);
         try {
             String url = speaker.getString("avatar");
-            Bitmap bmp = BitmapFactory.decodeFile(Uri.parse(url).getPath());
-            imageView.setImageBitmap(bmp);
+            SpAvatar spAvatar = new SpAvatar(imageView, url);
+            new GetAvatar().execute(spAvatar);
         } catch (Exception e) {
             Toast.makeText(this, "REQUIRE AVATAR", Toast.LENGTH_LONG).show();
             return;
@@ -158,4 +164,57 @@ public class PresentationActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private class SpAvatar{
+        ImageView imageView;
+        String url;
+        String errorMessage = null;
+        Bitmap bitmap;
+
+        public SpAvatar(ImageView imageView, String url){
+            this.imageView = imageView;
+            this.url = url;
+        }
+
+        public void setErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+    }
+    private class GetAvatar extends AsyncTask<SpAvatar, Void, SpAvatar> {
+        @Override
+        protected SpAvatar doInBackground(SpAvatar... spAvatars) {
+            SpAvatar ret = spAvatars[0];
+
+            try{
+                URL avatarUrl = new URL(ret.url);
+                InputStream inputStream = avatarUrl.openStream();
+
+                ret.bitmap = BitmapFactory.decodeStream(inputStream);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                ret.setErrorMessage(e.getMessage());
+            } catch (IOException e) {
+                e.printStackTrace();
+                ret.setErrorMessage(e.getMessage());
+            }
+
+            return ret;
+        }
+
+        @Override
+        protected void onPostExecute(SpAvatar spAvatar) {
+            if(spAvatar.getErrorMessage() != null){
+                Log.d("avatar", spAvatar.getErrorMessage());
+            } else {
+                Bitmap bitmap = spAvatar.bitmap;
+                spAvatar.imageView.setImageBitmap(bitmap);
+            }
+
+        }
+    }
+
 }
