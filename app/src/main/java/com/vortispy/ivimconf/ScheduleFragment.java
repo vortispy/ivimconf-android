@@ -65,7 +65,8 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
 
     // TODO: Rename and change types of parameters
     public static ScheduleFragment newInstance(JSONObject jsonObject) {
-        ScheduleFragment fragment = new ScheduleFragment(jsonObject);
+        ScheduleFragment fragment = new ScheduleFragment();
+        fragment.makeScheduleList(jsonObject);
 //        Bundle args = new Bundle();
 //        args.putString(ARG_PARAM1, param1);
 //        args.putString(ARG_PARAM2, param2);
@@ -80,7 +81,7 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
     public ScheduleFragment() {
     }
 
-    public ScheduleFragment(JSONObject jsonObject){
+/*    public ScheduleFragment(JSONObject jsonObject){
         this.infoJson = jsonObject;
         try {
             this.schedule = jsonObject.getJSONArray("schedules");
@@ -112,6 +113,17 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
             e.printStackTrace();
         }
     }
+*/
+//    @Override
+//    public void setArguments(Bundle args) {
+//        String strJson = args.getString("strJson");
+//        try {
+//            JSONObject infoJson = new JSONObject(strJson);
+//            makeScheduleList(infoJson);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -238,6 +250,10 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    public void reloadSchedule(JSONObject infoJson){
+        makeScheduleList(infoJson);
         scheduleAdapter.notifyDataSetChanged();
     }
 }

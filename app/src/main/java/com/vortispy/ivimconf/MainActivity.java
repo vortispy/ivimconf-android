@@ -119,7 +119,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
             {
                 // no need to call if fragment's onDestroyView()
                 //has since been called.
-                scheduleFragment.makeScheduleList(infoJson);
+                scheduleFragment.reloadSchedule(infoJson);
             }
         }
     }
