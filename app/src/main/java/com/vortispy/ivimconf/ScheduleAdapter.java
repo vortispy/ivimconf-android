@@ -52,7 +52,7 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
         try{
             long startUtc = item.getInt("starttime");
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yy/MM/dd HH:mm");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+09:00"));
             String time = simpleDateFormat.format(new Date(startUtc*1000));
             startTime.setText(time);
