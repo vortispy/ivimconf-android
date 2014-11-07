@@ -280,7 +280,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.activity_webview, container, false);
+            View rootView = inflater.inflate(R.layout.fragment_map, container, false);
 
             WebView webView = (WebView) rootView.findViewById(R.id.webView);
             webView.setWebViewClient(new WebViewClient());

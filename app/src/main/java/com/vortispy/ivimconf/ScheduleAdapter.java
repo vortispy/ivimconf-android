@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -30,9 +32,26 @@ import java.util.TimeZone;
  */
 public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
     private LayoutInflater inflater;
+
+    private LruCache<String, Bitmap> mMemoryCache;
+
     public ScheduleAdapter(Context context, int resource, List<JSONObject> items) {
         super(context, resource, items);
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        // Use 1/8th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 8;
+
+        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in kilobytes rather than
+                // number of items.
+                return bitmap.getByteCount() / 1024;
+            }
+        };
 
     }
 
@@ -52,7 +71,7 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
         try{
             long startUtc = item.getInt("starttime");
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yy/MM/dd HH:mm");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+09:00"));
             String time = simpleDateFormat.format(new Date(startUtc*1000));
             startTime.setText(time);
@@ -60,13 +79,22 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
             String titleText = item.getString("title");
             titleView.setText(titleText);
 
+
             if(item.has("speakers")){
                 JSONObject speaker = item.getJSONArray("speakers").getJSONObject(0);
                 String spName = speaker.getString("name");
                 speakerName.setText(spName);
 
-                SpAvatar spAvatar = new SpAvatar(avatar, speaker.getString("avatar"));
-                new GetAvatar().execute(spAvatar);
+                String urlAbatar = speaker.getString("avatar");
+                Bitmap bitmap = getBitmapFromMemCache(urlAbatar);
+                avatar.setVisibility(View.VISIBLE);
+                if(bitmap != null){
+                    avatar.setImageBitmap(bitmap);
+                }
+                else {
+                    SpAvatar spAvatar = new SpAvatar(avatar, urlAbatar);
+                    new GetAvatar().execute(spAvatar);
+                }
             }
             else {
                 avatar.setVisibility(View.INVISIBLE);
@@ -84,6 +112,16 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
         }
 
         return convertView;
+    }
+
+    public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+        if (getBitmapFromMemCache(key) == null) {
+            mMemoryCache.put(key, bitmap);
+        }
+    }
+
+    public Bitmap getBitmapFromMemCache(String key) {
+        return mMemoryCache.get(key);
     }
 
     private class SpAvatar{
@@ -110,6 +148,11 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
         protected SpAvatar doInBackground(SpAvatar... spAvatars) {
             SpAvatar ret = spAvatars[0];
 
+            ret.bitmap = getBitmapFromMemCache(ret.url);
+            if(ret.bitmap != null){
+                return ret;
+            }
+
             try{
                 URL avatarUrl = new URL(ret.url);
                 InputStream inputStream = avatarUrl.openStream();
@@ -132,6 +175,7 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
                 Log.d("avatar", spAvatar.getErrorMessage());
             } else {
                 Bitmap bitmap = spAvatar.bitmap;
+                addBitmapToMemoryCache(spAvatar.url, bitmap);
                 spAvatar.imageView.setImageBitmap(bitmap);
             }
 
