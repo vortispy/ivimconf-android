@@ -98,6 +98,7 @@ public class ScheduleAdapter extends ArrayAdapter<JSONObject> {
             }
             else {
                 avatar.setVisibility(View.INVISIBLE);
+                speakerName.setText("");
             }
 
             String typeOfSchedule = item.getString("type");

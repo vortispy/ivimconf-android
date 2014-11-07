@@ -110,6 +110,19 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         loadInfoJson();
     }
 
+    private void reloadSchedule(){
+        ScheduleFragment scheduleFragment = (ScheduleFragment) getFragmentManager()
+                .findFragmentByTag("android:switcher:"+R.id.pager+":0");
+        if(scheduleFragment != null)  // could be null if not instantiated yet
+        {
+            if(scheduleFragment.getView() != null)
+            {
+                // no need to call if fragment's onDestroyView()
+                //has since been called.
+                scheduleFragment.makeScheduleList(infoJson);
+            }
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -124,9 +137,16 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id){
+            case R.id.action_settings:
+                return true;
+            case R.id.refresh:
+                reloadInfoJson();
+                strJson = "";
+                reloadSchedule();
+                return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -231,6 +251,11 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                     return PlaceholderFragment.newInstance(position + 1);
             }
             return ScheduleFragment.newInstance(infoJson);
+        }
+
+        @Override
+        public int getItemPosition(Object object) {
+            return POSITION_NONE;
         }
 
         @Override

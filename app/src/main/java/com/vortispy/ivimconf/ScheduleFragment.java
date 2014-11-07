@@ -206,4 +206,38 @@ public class ScheduleFragment extends Fragment implements AbsListView.OnItemClic
         public void onFragmentInteraction(String id);
     }
 
+    public void makeScheduleList(JSONObject infoJson){
+        this.infoJson = infoJson;
+        scheduleList.clear();
+        try {
+            this.schedule = infoJson.getJSONArray("schedules");
+            JSONObject firstSchedule = schedule.getJSONObject(0);
+            long openTime = firstSchedule.getInt("scheduled_at");
+
+            long startTime = openTime;
+            for(int i = 0; i < schedule.length(); i++){
+                JSONObject nowSchedule = schedule.getJSONObject(i);
+                nowSchedule.accumulate("starttime", startTime);
+                scheduleList.add(nowSchedule);
+
+                // calculate next start time
+                Log.d("starttime", String.valueOf(startTime));
+                String timestr = nowSchedule.getString("time");
+                for(String w: timestr.split(" ")){
+                    try{
+                        Integer minutes = Integer.parseInt(w);
+                        startTime += minutes*60;
+                        Log.d("time", String.valueOf(startTime));
+                        break;
+                    } catch (Exception e){
+//                        e.printStackTrace();
+                        continue;
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        scheduleAdapter.notifyDataSetChanged();
+    }
 }
